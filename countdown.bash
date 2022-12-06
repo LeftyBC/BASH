@@ -144,7 +144,7 @@ while getopts 'onhd:' opts; do
     # get cmdline options
 
     case $opts in
-        d) TARGETDATE=${OPTARG} ;;
+        d) TARGETDATE="${OPTARG}" ;;
         o) ONESHOT=1 ;;
         n) NOSECONDS=1 ;;
         h) usage; exit 2 ;;
