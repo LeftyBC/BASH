@@ -1,10 +1,6 @@
 #!/usr/bin/env bash
 
 # pass a date like "Dec 12 2022" or "Dec 12 2022 04:00:00"
-target=$(date --date "$*" +%s)
-_start=$(date +%s)
-
-_origseconds=$(( ${target} - ${_start} ))
 
 CLEAR="\e[39m"
 RED="\e[31m"
@@ -16,15 +12,15 @@ LIGHTGREEN="\e[92m"
 CYAN="\e[36m"
 
 final_command(){
-        # change these commands to whatever you want the script to do when it's done
-        clear
-        echo ""
-        print_center "${CYAN}Target has passed!${CLEAR}"
-        echo ""
-        echo ""
+    # change these commands to whatever you want the script to do when it's done
+    clear
+    echo ""
+    print_center "${CYAN}Target has passed!${CLEAR}"
+    echo ""
+    echo ""
 
-		# beep
-		tput bel
+    # beep
+    tput bel
 }
 
 check_terminal_size(){
@@ -83,6 +79,10 @@ countdown(){
     today=$(date +%s)
 
     if [[ "$target" -lt "$today" ]]; then
+        if [[ "x${ONESHOT}" == "x1" ]]; then
+            echo "Target has passed"
+            exit 0
+        fi
         final_command
 		# ------------------------------------------------------
         # leave this command so the script exits when it is done
@@ -102,20 +102,81 @@ countdown(){
     seconds=$(( ( $totalseconds - ( $days * 86400 ) - ( $hours * 3600 ) - ( $minutes * 60 ) ) ))
 
     daystr=""
-    if [[ "$days" -gt 0 ]]; then
+    if [[ "$days" -eq 1 ]]; then
+        daystr="[1 day] "
+    elif [[ "$days" -gt 0 ]]; then
         daystr="[${days} days] "
     fi
 
-    printf -v line "%s%s%02dh:%02dm:%02d%s (%02d%%) \\r" "$COLOR" "$daystr" "$hours" "$minutes" "$seconds" "$CLEAR" "$pctleft"
+    if [[ "x${ONESHOT}" == "x1" ]]; then
+        if [[ "x${NOSECONDS}" == "x1" ]]; then
+            printf -v line "%s%s%02dh:%02dm%s" "$COLOR" "$daystr" "$hours" "$minutes" "$CLEAR"
+        else 
+            printf -v line "%s%s%02dh:%02dm:%02d%s" "$COLOR" "$daystr" "$hours" "$minutes" "$seconds" "$CLEAR"
+        fi
 
-	print_center "$line"
+        echo -ne "$line"
+        exit 0
+    else
+        if [[ "x${NOSECONDS}" == "x1" ]]; then
+            printf -v line "%s%s%02dh:%02dm (%02d%%) \\r" "$COLOR" "$daystr" "$hours" "$minutes" "$CLEAR" "$pctleft"
+        else
+            printf -v line "%s%s%02dh:%02dm:%02d%s (%02d%%) \\r" "$COLOR" "$daystr" "$hours" "$minutes" "$seconds" "$CLEAR" "$pctleft"
+        fi
+
+        print_center "$line"
+    fi
 }
+
+usage(){
+    echo "Countdown script" >&2
+    echo "" >&2
+    echo "Usage: $0 [-o] [-n] [-h] -d <date>" >&2
+    echo "" >&2
+    echo "-d <date>   date to count down to"
+    echo "-n    no seconds in countdown display"
+    echo "-o    one-shot mode - print countdown once and then exit" >&2
+    echo "-h    this help menu" >&2
+    echo "" >&2
+}
+
+while getopts 'onhd:' opts; do
+    # get cmdline options
+
+    case $opts in
+        d) TARGETDATE=${OPTARG} ;;
+        o) ONESHOT=1 ;;
+        n) NOSECONDS=1 ;;
+        h) usage; exit 2 ;;
+    esac
+done
+
+if [[ -z "${TARGETDATE}" ]]; then
+    echo "No date specified with -d <date>" >&2
+    echo "" >&2
+    usage
+    exit 2
+fi
+
+target=$(date --date "$TARGETDATE" +%s)
+_start=$(date +%s)
+
+_origseconds=$(( ${target} - ${_start} ))
 
 trap 'check_terminal_size' WINCH
 
+if [[ "x$ONESHOT" == "x1" ]]; then
+    # one-shot mode, only display once and then exit
+    # useful for running in i3bar, for example
+    countdown
+    exit 0
+fi
+
+# regular, "watch" mode if oneshot isn't specified
 clear
 echo ""
 while true; do
     countdown
-    for i in {1..9}; do sleep 0.1; done
+    sleep 0.5
+    sleep 0.5
 done
