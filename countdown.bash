@@ -129,14 +129,14 @@ countdown(){
 }
 
 usage(){
-    echo "Countdown script" >&2
+    echo "Countdown script - counts down to a specified date" >&2
     echo "" >&2
     echo "Usage: $0 [-o] [-n] [-h] -d <date>" >&2
     echo "" >&2
     echo "-d <date>   date to count down to"
-    echo "-n    no seconds in countdown display"
-    echo "-o    one-shot mode - print countdown once and then exit" >&2
-    echo "-h    this help menu" >&2
+    echo "-n          no seconds in countdown display"
+    echo "-o          one-shot mode - print countdown once and then exit" >&2
+    echo "-h          this help menu" >&2
     echo "" >&2
 }
 
