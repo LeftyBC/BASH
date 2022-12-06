@@ -53,7 +53,7 @@ print_center(){
 }
 
 set_color(){
-	_secondsleft=$1
+    _secondsleft=$1
     pctleft=$(( (  ${_secondsleft} * 100 ) / ( ${_origseconds} ) ))
 
     if [[ "$pctleft" -le 25 ]]; then
@@ -74,7 +74,7 @@ set_color(){
 }
 
 countdown(){
-	local today
+    local today
 
     today=$(date +%s)
 
